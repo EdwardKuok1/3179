@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Australia — Housing Affordability by State/Territory</title>
+  <title>Australia — Comparing salary, rent and house prices</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
@@ -15,6 +15,7 @@
   </style>
 </head>
 <body>
+  <h2>Australia — Comparing salary, rent and house prices</h2>
   <div id="vis"></div>
 
   <script>
@@ -146,7 +147,8 @@
           }
         ],
 
-        "config": {"legend":{"orient":"bottom"},"view":{"stroke":null},
+        "config": {"legend":{"orient":"bottom"},"view":{"stroke":null},"title":{"fontSize":18,"anchor":"start"}},
+        "title": "Australia — Housing Affordability by State/Territory"
       };
 
       await vegaEmbed("#vis", spec, {actions:false});
