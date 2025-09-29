@@ -63,7 +63,7 @@
         "params": [{
           "name":"metric",
           "value":"Median Rent (PW)",
-          "bind":{"input":"select","options":["Avg Wage","Avg Rent (PW)","Avg House Price"]}
+          "bind":{"input":"select","options":["Avg Wage","Median Rent (PW)","Avg House Price"]}
         }],
 
         "layer": [
@@ -95,10 +95,10 @@
                 "from": {
                   "data": {"url": CSV_PATH},
                   "key": "states",
-                  "fields": ["Avg Wage","Avg Rent (PW)","Avg House Price"]
+                  "fields": ["Avg Wage","Median Rent (PW)","Avg House Price"]
                 }
               },
-              {"fold": ["Avg Wage","Avg Rent (PW)","Avg House Price"], "as": ["Metric","Value"]},
+              {"fold": ["Avg Wage","Median Rent (PW)","Avg House Price"], "as": ["Metric","Value"]},
               {"filter": "datum.Metric === metric"}
             ],
             "mark": {"type":"geoshape","stroke":"#ffffff","strokeWidth":1},
