@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Australia — Housing Affordability by State/Territory</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+  <style>
+    :root { --maxw: 980px; }
+    body { font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
+    #vis { max-width: var(--maxw); margin: 0 auto; }
+    pre.err { max-width: var(--maxw); margin: 16px auto; color: #b00020; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h2>Australia — Housing Affordability by State/Territory</h2>
+  <div id="vis"></div>
+
+  <script>
+    const TOPO_PATH = "geo/au_states.json";
+    const CSV_PATH  = "data/ausaffordability.csv";
+
+    // Capital coords + where to place the label (lon/lat). Tweak the label lon/lat to taste.
+    const LABELS = [
+      {ABBR:"WA",  lon:115.8570, lat:-31.9505, lablon:121,   lablat:-29.8},
+      {ABBR:"NT",  lon:130.8456, lat:-12.4634, lablon:135.2, lablat:-10.8},
+      {ABBR:"SA",  lon:138.6007, lat:-34.9285, lablon:143,   lablat:-31.4},
+      {ABBR:"QLD", lon:153.0251, lat:-27.4698, lablon:158.2, lablat:-24.5},
+      {ABBR:"NSW", lon:151.2093, lat:-33.8688, lablon:155.5, lablat:-34.6},
+      {ABBR:"VIC", lon:144.9631, lat:-37.8136, lablon:149.0, lablat:-39.0},
+      {ABBR:"TAS", lon:147.3272, lat:-42.8821, lablon:150.8, lablat:-43.7},
+      {ABBR:"ACT", lon:149.1300, lat:-35.2809, lablon:152.4, lablat:-36.4}
+    ];
+
+    // Build a dataset of two rows per state for the leader lines
+    const LINES = LABELS.flatMap(d => ([
+      {ABBR:d.ABBR, order:0, lon:d.lon,   lat:d.lat},
+      {ABBR:d.ABBR, order:1, lon:d.lablon,lat:d.lablat}
+    ]));
+
+    async function main() {
+      const topo = await (await fetch(TOPO_PATH)).json();
+      if (topo.type !== "Topology" || !topo.objects) throw new Error("geo/au_states.json is not valid TopoJSON.");
+      const featureName = Object.keys(topo.objects)[0]; // e.g., "STE_2021_AUST"
+
+      const spec = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "width": 900,
+        "height": 650,
+        "background": "#eef6fa",
+
+        /* try the conicConformal settings that make AU look "flat".
+           If you prefer equalEarth, swap this block for { "type":"equalEarth", "center":[134,-25], "rotate":[-134,0,0] } */
+        "projection": {
+          "type": "conicConformal",
+          "parallels": [-18, -36],
+          "rotate": [-134, 0, 0],
+          "center": [0, -25]
+        },
+
+        "params": [{
+          "name":"metric",
+          "value":"Avg Rent (PW)",
+          "bind":{"input":"select","options":["Avg Wage","Avg Rent (PW)","Avg House Price"]}
+        }],
+
+        "layer": [
+          /* graticule limited to AU extent */
+          {
+            "data": {"graticule": {"step":[10,10], "extent": [[112,-44],[154,-10]]}},
+            "mark": {"type":"geoshape","stroke":"#9fb3c8","strokeWidth":0.6,"filled":false}
+          },
+
+          /* choropleth with robust join (uses STE_ABBREV if present, else maps names → ABBR) */
+          {
+            "data": {"url": TOPO_PATH, "format": {"type":"topojson","feature": featureName}},
+            "transform": [
+              {
+                "calculate":
+                  "datum.properties && datum.properties.STE_ABBREV ? datum.properties.STE_ABBREV : " +
+                  "(datum.properties && datum.properties.STE_NAME21 == 'New South Wales' ? 'NSW' : " +
+                  " datum.properties && datum.properties.STE_NAME21 == 'Victoria' ? 'VIC' : " +
+                  " datum.properties && datum.properties.STE_NAME21 == 'Queensland' ? 'QLD' : " +
+                  " datum.properties && datum.properties.STE_NAME21 == 'South Australia' ? 'SA' : " +
+                  " datum.properties && datum.properties.STE_NAME21 == 'Western Australia' ? 'WA' : " +
+                  " datum.properties && datum.properties.STE_NAME21 == 'Tasmania' ? 'TAS' : " +
+                  " datum.properties && datum.properties.STE_NAME21 == 'Northern Territory' ? 'NT' : " +
+                  " datum.properties && datum.properties.STE_NAME21 == 'Australian Capital Territory' ? 'ACT' : null)",
+                "as": "ABBR"
+              },
+              {
+                "lookup": "ABBR",
+                "from": {
+                  "data": {"url": CSV_PATH},
+                  "key": "states",
+                  "fields": ["Avg Wage","Avg Rent (PW)","Avg House Price"]
+                }
+              },
+              {"fold": ["Avg Wage","Avg Rent (PW)","Avg House Price"], "as": ["Metric","Value"]},
+              {"filter": "datum.Metric === metric"}
+            ],
+            "mark": {"type":"geoshape","stroke":"#ffffff","strokeWidth":1},
+            "encoding": {
+              "color": {"field":"Value","type":"quantitative","scale":{"scheme":"blues"},"title":{"expr":"metric"}},
+              "tooltip": [
+                {"field":"ABBR","title":"State"},
+                {"field":"Value","title":{"expr":"metric"}}
+              ]
+            }
+          },
+
+          /* leader lines: capital → label point */
+          {
+            "data": {"values": LINES},
+            "mark": {"type": "line", "stroke": "#2b3e50", "strokeWidth": 1, "opacity": 0.8},
+            "encoding": {
+              "longitude": {"field":"lon"}, "latitude": {"field":"lat"},
+              "order": {"field":"order"},            /* ensures the line connects start then end */
+              "detail": {"field":"ABBR"}             /* one line per state */
+            }
+          },
+
+          /* text labels at label points with dynamic metric value */
+          {
+            "data": {"values": LABELS},
+            "transform": [
+              {
+                "lookup": "ABBR",
+                "from": {
+                  "data": {"url": CSV_PATH},
+                  "key": "states",
+                  "fields": ["Avg Wage","Avg Rent (PW)","Avg House Price"]
+                }
+              },
+              {"fold": ["Avg Wage","Avg Rent (PW)","Avg House Price"], "as": ["Metric","Value"]},
+              {"filter": "datum.Metric === metric"},
+              {"calculate": "datum.ABBR + ': ' + format(datum.Value, datum.Metric==='Avg House Price' ? ',.0f' : ',.1f')", "as": "labelText"}
+            ],
+            "mark": {"type":"text", "fontSize": 12, "fontWeight":"600", "dx": 0, "dy": 0, "fill": "#1f2d3a"},
+            "encoding": {
+              "longitude": {"field":"lablon"},
+              "latitude": {"field":"lablat"},
+              "text": {"field":"labelText"}
+            }
+          }
+        ],
+
+        "config": {"legend":{"orient":"bottom"},"view":{"stroke":null},"title":{"fontSize":18,"anchor":"start"}},
+        "title": "Australia — Housing Affordability by State/Territory"
+      };
+
+      await vegaEmbed("#vis", spec, {actions:false});
+    }
+
+    main().catch(err => {
+      console.error(err);
+      const pre = document.createElement('pre');
+      pre.className = 'err';
+      pre.textContent = String(err.stack || err);
+      document.body.appendChild(pre);
+    });
+  </script>
+</body>
+</html>
