@@ -131,10 +131,10 @@
                 "from": {
                   "data": {"url": CSV_PATH},
                   "key": "states",
-                  "fields": ["Avg Wage","Avg Rent (PW)","Avg House Price"]
+                  "fields": ["Avg Wage","Median Rent (PW)","Avg House Price"]
                 }
               },
-              {"fold": ["Avg Wage","Avg Rent (PW)","Avg House Price"], "as": ["Metric","Value"]},
+              {"fold": ["Avg Wage","Median Rent (PW)","Avg House Price"], "as": ["Metric","Value"]},
               {"filter": "datum.Metric === metric"},
               {"calculate": "datum.ABBR + ': ' + format(datum.Value, datum.Metric==='Avg House Price' ? ',.0f' : ',.1f')", "as": "labelText"}
             ],
