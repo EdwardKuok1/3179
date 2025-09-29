@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <title>Australia — Housing Affordability by State/Territory</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
@@ -14,6 +15,7 @@
   </style>
 </head>
 <body>
+  <div id="vis"></div>
 
   <script>
     const TOPO_PATH = "geo/au_states.json";
@@ -144,8 +146,7 @@
           }
         ],
 
-        "config": {"legend":{"orient":"bottom"},"view":{"stroke":null},"title":{"fontSize":18,"anchor":"start"}},
-        "title": "Australia — Housing Affordability by State/Territory"
+        "config": {"legend":{"orient":"bottom"},"view":{"stroke":null},
       };
 
       await vegaEmbed("#vis", spec, {actions:false});
