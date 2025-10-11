@@ -40,6 +40,22 @@
       {ABBR:d.ABBR, order:1, lon:d.lablon,lat:d.lablat}
     ]));
 
+    // State abbreviation → full name mapping and precomputed y positions for a right-side legend
+    const STATE_NAMES = [
+      {ABBR:"NSW", name:"New South Wales"},
+      {ABBR:"VIC", name:"Victoria"},
+      {ABBR:"QLD", name:"Queensland"},
+      {ABBR:"SA",  name:"South Australia"},
+      {ABBR:"WA",  name:"Western Australia"},
+      {ABBR:"TAS", name:"Tasmania"},
+      {ABBR:"NT",  name:"Northern Territory"},
+      {ABBR:"ACT", name:"Australian Capital Territory"}
+    ];
+    const STATE_LEGEND = STATE_NAMES.map((d, i) => ({
+      text: `${d.ABBR} — ${d.name}`,
+      y: 60 + i * 24
+    }));
+
     async function main() {
       const topo = await (await fetch(TOPO_PATH)).json();
       if (topo.type !== "Topology" || !topo.objects) throw new Error("geo/au_states.json is not valid TopoJSON.");
@@ -143,6 +159,17 @@
               "longitude": {"field":"lablon"},
               "latitude": {"field":"lablat"},
               "text": {"field":"labelText"}
+            }
+          }
+          ,
+          /* right-side legend of state abbreviations → full names */
+          {
+            "data": {"values": STATE_LEGEND},
+            "mark": {"type":"text", "fontSize": 12, "fontWeight":"600", "align":"left", "fill": "#1f2d3a"},
+            "encoding": {
+              "x": {"value": 720},
+              "y": {"field":"y"},
+              "text": {"field":"text"}
             }
           }
         ],
