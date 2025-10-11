@@ -1,0 +1,91 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Wage vs Rent by state with affordability filter and 30% guideline.",
+  "width": 680,
+  "height": 440,
+  "data": { "url": "data/ausaffordability.csv" },
+  "config": {
+    "numberFormat": ",",
+    "axis": { "labelFontSize": 12, "titleFontSize": 13 },
+    "view": { "stroke": null }
+  },
+  "params": [
+    {
+      "name": "MaxBurden",
+      "value": 0.4,
+      "bind": { "input": "range", "min": 0.2, "max": 0.6, "step": 0.01, "name": "Max rent burden (ratio): ", "format": ".0%" }
+    }
+  ],
+  "transform": [
+    { "calculate": "datum.states", "as": "ABBR" },
+    {
+      "calculate": "datum.ABBR==='NSW' ? 'New South Wales' : datum.ABBR==='VIC' ? 'Victoria' : datum.ABBR==='QLD' ? 'Queensland' : datum.ABBR==='SA' ? 'South Australia' : datum.ABBR==='WA' ? 'Western Australia' : datum.ABBR==='TAS' ? 'Tasmania' : datum.ABBR==='NT' ? 'Northern Territory' : datum.ABBR==='ACT' ? 'Australian Capital Territory' : datum.ABBR",
+      "as": "StateName"
+    },
+    { "calculate": "toNumber(replace(datum['Avg Wage'], ',', ''))", "as": "Wage" },
+    { "calculate": "toNumber(replace(datum['Median Rent (PW)'], ',', ''))", "as": "RentPW" },
+    { "calculate": "toNumber(replace(datum['Avg House Price'], ',', ''))", "as": "HousePrice" },
+    { "filter": "isValid(datum.Wage) && isValid(datum.RentPW)" },
+    { "calculate": "datum.RentPW / datum.Wage", "as": "RentToWage" },
+    { "filter": "isValid(datum.RentToWage) && datum.RentToWage <= MaxBurden" },
+    { "calculate": "format(datum.Wage, '$,.0f')", "as": "WageFmt" },
+    { "calculate": "format(datum.RentPW, '$,.0f')", "as": "RentFmt" },
+    { "calculate": "format(datum.HousePrice, '$,.0f')", "as": "HouseFmt" },
+    { "calculate": "format(datum.RentToWage, '.0%')", "as": "RatioFmt" }
+  ],
+  "layer": [
+    {
+      "mark": { "type": "point", "filled": true, "size": 140, "opacity": 0.85, "stroke": "white", "strokeWidth": 0.7 },
+      "encoding": {
+        "x": { "field": "Wage", "type": "quantitative", "title": "Average Weekly Wage (AUD)", "axis": { "format": "$,d" } },
+        "y": { "field": "RentPW", "type": "quantitative", "title": "Median Weekly Rent (AUD)", "axis": { "format": "$,d" } },
+        "size": { "field": "HousePrice", "type": "quantitative", "title": "Average House Price", "scale": { "type": "sqrt", "range": [60, 900] }, "legend": { "format": "$,s" } },
+        "color": {
+          "field": "ABBR",
+          "type": "nominal",
+          "title": "State",
+          "legend": {
+            "labelExpr": "datum.label==='NSW' ? 'New South Wales' : datum.label==='VIC' ? 'Victoria' : datum.label==='QLD' ? 'Queensland' : datum.label==='SA' ? 'South Australia' : datum.label==='WA' ? 'Western Australia' : datum.label==='TAS' ? 'Tasmania' : datum.label==='NT' ? 'Northern Territory' : datum.label==='ACT' ? 'Australian Capital Territory' : datum.label"
+          }
+        },
+        "tooltip": [
+          { "field": "StateName", "title": "State" },
+          { "field": "WageFmt", "title": "Average Weekly Wage" },
+          { "field": "RentFmt", "title": "Median Weekly Rent" },
+          { "field": "HouseFmt", "title": "Average House Price" },
+          { "field": "RatioFmt", "title": "Rent-to-Wage" }
+        ]
+      }
+    },
+    {
+      "data": { "sequence": { "start": 0, "stop": 4000, "step": 10, "as": "x" } },
+      "transform": [ { "calculate": "0.3 * datum.x", "as": "y" } ],
+      "mark": { "type": "line", "strokeDash": [6, 4], "strokeWidth": 2, "color": "#666" },
+      "encoding": { "x": { "field": "x", "type": "quantitative" }, "y": { "field": "y", "type": "quantitative" } }
+    },
+    {
+      "data": { "values": [ { "x": 3200, "y": 960, "label": "30% rent burden" } ] },
+      "mark": { "type": "text", "align": "right", "dy": -6, "fontSize": 11, "color": "#444" },
+      "encoding": { "x": { "field": "x", "type": "quantitative" }, "y": { "field": "y", "type": "quantitative" }, "text": { "field": "label" } }
+    },
+    {
+      "data": {
+        "values": [
+          { "x": 3900, "y": 100, "label": "<30%  =  affordable" },
+          { "x": 3900, "y": 50, "label": ">30%  =  unaffordable" }
+        ]
+      },
+      "mark": {
+        "type": "text",
+        "align": "right",
+        "fontSize": 11,
+        "fill": "#555"
+      },
+      "encoding": {
+        "x": { "field": "x", "type": "quantitative" },
+        "y": { "field": "y", "type": "quantitative" },
+        "text": { "field": "label" }
+      }
+    }
+  ]
+}
