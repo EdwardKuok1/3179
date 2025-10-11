@@ -140,7 +140,7 @@
               },
               "tooltip": [
                 {"field":"ABBR","title":"State"},
-                {"field":"Value","title":{"expr":"metric"}}
+                {"field":"Value","title":{"expr":"metric"}},
                 { "field": "ValueFmt",  "title": "Value" }
               ]
             }
@@ -177,7 +177,7 @@
                   "                     datum.Metric==='Avg Wage'        ? format(datum.Value, '$,.0f') :" +
                   "                                                     format(datum.Value, '$,.0f'))",
                 "as": "labelText"
-              },
+              }
             ],
             "mark": {"type":"text", "fontSize": 12, "fontWeight":"600", "dx": 0, "dy": 0, "fill": "#1f2d3a"},
             "encoding": {
