@@ -12,6 +12,9 @@
     body { font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
     #vis { max-width: var(--maxw); margin: 0 auto; }
     pre.err { max-width: var(--maxw); margin: 16px auto; color: #b00020; white-space: pre-wrap; }
+    .vega-tooltip table { border-spacing: 0; }
+    .vega-tooltip td.key   { font-weight: 400; color:#333; padding: 4px 10px 4px 0; }
+    .vega-tooltip td.value { font-weight: 700; color:#111; padding: 4px 0; text-align: right; }
   </style>
 </head>
 <body>
@@ -99,14 +102,46 @@
                 }
               },
               {"fold": ["Avg Wage","Median Rent (PW)","Avg House Price"], "as": ["Metric","Value"]},
-              {"filter": "datum.Metric === metric"}
+              {"filter": "datum.Metric === metric"},
+              {
+                "calculate":
+                  "datum.ABBR === 'NSW' ? 'New South Wales' :" +
+                  "datum.ABBR === 'VIC' ? 'Victoria' :" +
+                  "datum.ABBR === 'QLD' ? 'Queensland' :" +
+                  "datum.ABBR === 'SA'  ? 'South Australia' :" +
+                  "datum.ABBR === 'WA'  ? 'Western Australia' :" +
+                  "datum.ABBR === 'TAS' ? 'Tasmania' :" +
+                  "datum.ABBR === 'NT'  ? 'Northern Territory' :" +
+                  "datum.ABBR === 'ACT' ? 'Australian Capital Territory' : datum.ABBR",
+                "as": "StateName"
+              },
+
+              /* ▼▼ NEW: preformatted value string for tooltip (AUD) */
+              {
+                "calculate":
+                  "metric==='Avg Wage' ? format(datum.Value, '$,.0f') :" +
+                  "metric==='Median Rent (PW)' ? format(datum.Value, '$,.0f') :" +
+                  "format(datum.Value, '$,.0f')",
+                "as": "ValueFmt"
+              }
             ],
             "mark": {"type":"geoshape","stroke":"#ffffff","strokeWidth":1},
             "encoding": {
-              "color": {"field":"Value","type":"quantitative","scale":{"scheme":"blues"},"title":{"expr":"metric"}},
+              "color": {
+                "field": "Value",
+                "type": "quantitative",
+                "scale": {"scheme": "blues"},
+                "title": {
+                  "expr":
+                    "metric==='Avg Wage' ? 'Average Weekly Wage (AUD)' :" +
+                    "metric==='Median Rent (PW)' ? 'Median Weekly Rent (AUD)' :" +
+                    "'Average House Price (AUD)'"
+                }
+              },
               "tooltip": [
                 {"field":"ABBR","title":"State"},
                 {"field":"Value","title":{"expr":"metric"}}
+                { "field": "ValueFmt",  "title": "Value" }
               ]
             }
           },
@@ -136,7 +171,13 @@
               },
               {"fold": ["Avg Wage","Median Rent (PW)","Avg House Price"], "as": ["Metric","Value"]},
               {"filter": "datum.Metric === metric"},
-              {"calculate": "datum.ABBR + ': ' + format(datum.Value, datum.Metric==='Avg House Price' ? ',.0f' : ',.1f')", "as": "labelText"}
+              {
+                "calculate":
+                  "datum.ABBR + ': ' + (datum.Metric==='Avg House Price' ? format(datum.Value, '$,.0f') :" +
+                  "                     datum.Metric==='Avg Wage'        ? format(datum.Value, '$,.0f') :" +
+                  "                                                     format(datum.Value, '$,.0f'))",
+                "as": "labelText"
+              },
             ],
             "mark": {"type":"text", "fontSize": 12, "fontWeight":"600", "dx": 0, "dy": 0, "fill": "#1f2d3a"},
             "encoding": {
@@ -147,7 +188,12 @@
           }
         ],
 
-        "config": {"legend":{"orient":"bottom"},"view":{"stroke":null},"title":{"fontSize":18,"anchor":"start"}},
+        "config": {
+          "numberFormat": ",",               // thousand separators everywhere
+          "legend": { "orient": "bottom", "titleFontWeight": "700", "labelFontSize": 12 },
+          "title":  { "fontSize": 18, "anchor": "start" },
+          "view":   { "stroke": null },
+          "legend":{"orient":"bottom"},"view":{"stroke":null},"title":{"fontSize":18,"anchor":"start"}},
         "title": "Australia - Housing Affordability by State/Territory"
       };
 
