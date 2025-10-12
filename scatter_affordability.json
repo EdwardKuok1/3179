@@ -71,8 +71,8 @@
     {
       "data": {
         "values": [
-          { "x": 0, "y": 1150, "label": "The highest ratio is New South Wales at 35%" },
-          { "x": 0, "y": 1100, "label": "The lowest ratio is Tasmania at 27%" }
+          { "x": 20, "y": 1150, "label": "The highest ratio is New South Wales at 35%" },
+          { "x": 20, "y": 1100, "label": "The lowest ratio is Tasmania at 27%" }
         ]
       },
       "mark": {
