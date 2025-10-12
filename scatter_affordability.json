@@ -13,7 +13,7 @@
     {
       "name": "MaxBurden",
       "value": 0.4,
-      "bind": { "input": "range", "min": 0.2, "max": 0.6, "step": 0.01, "name": "Max rent burden (ratio): ", "format": ".0%" }
+      "bind": { "input": "range", "min": 0.2, "max": 0.6, "step": 0.01, "name": "Max rent burden (ratio): "}
     }
   ],
   "transform": [
@@ -71,13 +71,13 @@
     {
       "data": {
         "values": [
-          { "x": 3900, "y": 100, "label": "<30%  =  affordable" },
-          { "x": 3900, "y": 50, "label": ">30%  =  unaffordable" }
+          { "x": 0, "y": 1150, "label": "The highest ratio is New South Wales at 35%" },
+          { "x": 0, "y": 1100, "label": "The lowest ratio is Tasmania at 27%" }
         ]
       },
       "mark": {
         "type": "text",
-        "align": "right",
+        "align": "left",
         "fontSize": 11,
         "fill": "#555"
       },
