@@ -13,16 +13,18 @@
       font-family: "Inter", "Roboto", sans-serif;
       color: #222;
       margin: 40px auto;
-      max-width: 900px;
+      max-width: 1350px;
       line-height: 1.6;
       background-color: #fafafa;
     }
+
     h1 {
       font-size: 2em;
       font-weight: 700;
       text-align: center;
       margin-bottom: 0.2em;
     }
+
     h2 {
       text-align: center;
       font-weight: 400;
@@ -30,14 +32,70 @@
       margin-top: 0;
       margin-bottom: 1.5em;
     }
+
+    /* ===== Generic layout blocks ===== */
+    .section {
+      margin: 50px 0;
+    }
+
+    .row {
+      display: flex;
+      gap: 28px;
+      align-items: flex-start;
+    }
+
+    .row.reverse {
+      flex-direction: row-reverse; /* for alternating layout */
+    }
+
+    .col-vis {
+      flex: 0 0 62%;
+      min-width: 680px;
+    }
+
+    .col-text {
+      flex: 1;
+      font-size: 15px;
+      max-width: 520px;
+      line-height: 1.65;
+      text-align: left;
+    }
+
+    /* ===== Visualization container ===== */
     .vis-container {
-      margin: 40px 0;
+      margin: 0 auto;
+      width: 100%;
       border: 1px solid #eee;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
       padding: 16px;
       background: white;
     }
+
+    /* ===== Text section styling ===== */
+    .text-section {
+      margin-top: 20px;
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+    }
+
+    .map-caption {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #444;
+      text-align: center;
+    }
+
+    .section-divider {
+      border: none;
+      height: 1px;
+      background: #ddd;
+      margin: 40px 0;
+    }
+
+    /* ===== Footer ===== */
     footer {
       margin-top: 3em;
       font-size: 0.9em;
@@ -46,67 +104,255 @@
       padding-top: 1em;
       text-align: center;
     }
-    a { color: #0066cc; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-  </style>
-</head>
-<body>
-  <h1>Rental Affordability in Victoria (2025)</h1>
-  <h2>Exploring how rent prices vary across regions of Victoria</h2>
 
-  <p>
-    This visualization examines the <strong>median rent prices</strong> across Victoria in 2025,
-    highlighting regional differences in affordability. Darker shades indicate higher rental costs.
-    Hover over a region to view its details.
-  </p>
+    a {
+      color: #0066cc;
+      text-decoration: none;
+    }
 
-  <div class="vis-container" id="rent-map"></div>
+    a:hover {
+      text-decoration: underline;
+    }
 
-  <footer>
-    <p>
-      Data source: <a href="https://housing.vic.gov.au/" target="_blank">Housing Victoria</a> (March Quarter 2025).<br>
-      Author: Your Name &middot; Built with <a href="https://vega.github.io/vega-lite/" target="_blank">Vega-Lite</a>.
-    </p>
-  </footer>
+    /* ===== Responsive layout for smaller screens ===== */
+    @media (max-width: 1100px) {
+      .row, .row.reverse {
+        flex-direction: column;
+      }
 
-  <script>
-const mapSpec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-  "width": 700,
-  "height": 600,
-  "data": {
-    "url": "geo/victopo.json",
-    "format": {"type": "topojson", "feature": "SA3_2021_AUST_GDA2020"}
-  },
-  "transform": [
-    {
-      "lookup": "properties.SA3_NAME21",
-      "from": {
-        "data": {"url": "data/victoria_median_rent.csv"},
-        "key": "Locality",
-        "fields": ["Median Rent"]
+      .col-vis {
+        min-width: 0;
+      }
+
+      .col-text {
+        max-width: none;
       }
     }
-  ],
-  "projection": {"type": "mercator"},
-  "mark": {"type": "geoshape", "stroke": "white", "strokeWidth": 0.5},
-  "encoding": {
-    "color": {
-      "field": "Median Rent",
-      "type": "quantitative",
-      "scale": {"scheme": "blues"},
-      "legend": {"title": "Median Rent ($/week)"}
-    },
-    "tooltip": [
-      {"field": "properties.SA3_NAME21", "title": "Region"},
-      {"field": "Median Rent", "title": "Median Rent ($/week)"}
-    ]
-  },
-  "config": {"view": {"stroke": null}}
-};
+  </style>
 
-vegaEmbed("#rent-map", mapSpec, {actions: false});
-</script>
+</head>
+<body>
+    <h1>Rental Affordability in Victoria (2025)</h1>
+    <h2>Exploring how rent prices vary across regions of Victoria</h2>
+    <!-- Section 1: Victoria (map left, text right) -->
+    <section class="section">
+      <div class="row">
+        <div class="col-vis">
+          <div id="rent-map" class="vis-container"></div>
+        </div>
+        <div class="col-text">
+          <h3>Victoria Median Rent (2025)</h3>
+          <p>
+            The median weekly rent in rural Victoria is on average $100 lower than the Greater Melbourne area, 
+            with most regions falling between $200–$350 per week. Loddon – Elmore records the lowest rent at $190 per week.
+          </p>
+          <p>
+            Noticeably, the east side of rural Victoria has a higher median rent than the west side, 
+            which may be influenced by its proximity to the Australian Capital Territory and New South Wales, 
+            as well as stronger economic links with regional hubs like Albury–Wodonga and East Gippsland.
+          </p>
+          <p>
+            These lower rental prices reflect the reduced housing demand and cost of living in less densely 
+            populated areas, though it may also indicate fewer employment opportunities and slower population growth.
+          </p>
+        </div>
+      </div>
+    </section>
 
-</body>
+    <!-- Section 2: Melbourne (text left, map right) -->
+    <section class="section">
+      <div class="row reverse">
+        <div class="col-vis">
+          <div id="mel-map" class="vis-container"></div>
+        </div>
+        <div class="col-text">
+          <h3>Greater Melbourne Median Rent (2025)</h3>
+          <p>
+            The Greater Melbourne area has a higher median rent than rural Victoria, 
+            ranging from $300–$550 per week. Inner Melbourne averages around $500 per week, 
+            with Melbourne City itself being the highest at $550 per week.
+          </p>
+          <p>
+            Higher rents in the city core reflect the concentration of employment, 
+            universities, and services, driving strong housing demand. 
+            Outer suburban areas such as Whittlesea and Macedon Ranges remain more affordable, 
+            providing lower-cost options for renters willing to commute.
+          </p>
+          <p>
+            The sharp contrast between central and outer Melbourne highlights 
+            the ongoing challenges of housing affordability and urban sprawl 
+            in Victoria’s most populated region.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p>Data source: <a href="https://housing.vic.gov.au/" target="_blank">Housing Victoria</a> (March Quarter 2025).</p>
+    </footer>
+
+    <script>
+      const vicSpec = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "title": {
+          "text": "Rural Victoria Median Rent (2025)",
+          "subtitle": "red = highest, teal = lowest",
+          "anchor": "start", "fontSize": 18, "subtitleFontSize": 12, "color":"#111"
+        },
+        "width": "container",
+        "height": 520,
+        "autosize": {"type":"fit","contains":"padding"},
+        "projection": {"type":"mercator"},
+        "data": {
+          "url": "geo/victopo.json",
+          "format": {"type":"topojson","feature":"SA3_2021_AUST_GDA2020"}
+        },
+        "transform": [
+          {"filter":"datum.properties.STE_NAME21 == 'Victoria'"},
+          {
+            "lookup":"properties.SA3_NAME21",
+            "from":{
+              "data":{
+                "url":"data/victoria_median_rent.csv",
+                "format":{"type":"csv","parse":{"Median Rent":"number"}}
+              },
+              "key":"Locality",
+              "fields":["Median Rent"]
+            }
+          }
+        ],
+        "layer":[
+          {
+            "mark":{"type":"geoshape","stroke":"white","strokeWidth":0.5},
+            "encoding":{
+              "color":{
+                "field":"Median Rent","type":"quantitative",
+                "scale":{"scheme":"blues"},
+                "legend":{"title":"Median Rent ($/week)"}
+              },
+              "tooltip":[
+                {"field":"properties.SA3_NAME21","title":"Region"},
+                {"field":"Median Rent","title":"Median Rent ($/week)"}
+              ]
+            }
+          },
+          /* Highest overlay (statewide) */
+          {
+            "transform":[
+              {"joinaggregate":[{"op":"max","field":"Median Rent","as":"maxRent"}]},
+              {"filter":"isValid(datum['Median Rent']) && datum['Median Rent'] == datum.maxRent"}
+            ],
+            "mark":{"type":"geoshape","stroke":"#111","strokeWidth":1.2},
+            "encoding":{
+              "color":{"value":"#d7263d"},
+              "tooltip":[
+                {"field":"properties.SA3_NAME21","title":"Region (Highest)"},
+                {"field":"Median Rent","title":"Median Rent ($/week)"}
+              ]
+            }
+          },
+          /* Lowest overlay (statewide, handles ties) */
+          {
+            "transform":[
+              {"joinaggregate":[{"op":"min","field":"Median Rent","as":"minRent"}]},
+              {"filter":"isValid(datum['Median Rent']) && datum['Median Rent'] == datum.minRent"}
+            ],
+            "mark":{"type":"geoshape","stroke":"#111","strokeWidth":1.2},
+            "encoding":{
+              "color":{"value":"#2a9d8f"},
+              "tooltip":[
+                {"field":"properties.SA3_NAME21","title":"Region (Lowest)"},
+                {"field":"Median Rent","title":"Median Rent ($/week)"}
+              ]
+            }
+          }
+        ],
+        "config":{"view":{"stroke":null}}
+      };
+      vegaEmbed("#rent-map", vicSpec, {actions:false});
+    </script>
+
+
+    <script>
+      const melSpec = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "title": {
+          "text": "Greater Melbourne Median Rent (2025)",
+          "subtitle": "red = highest, teal = lowest",
+          "anchor": "start", "fontSize": 18, "subtitleFontSize": 12, "color":"#111"
+        },
+        "width": "container",
+        "height": 520,
+        "autosize": {"type":"fit","contains":"padding"},
+        "projection": {"type":"mercator"},
+        "data": {
+          "url": "geo/meltopo.json",
+          "format": {"type":"topojson","feature":"SA3_2021_AUST_GDA2020"}
+        },
+        "transform": [
+          /* meltopo already limits geometry; still join the same CSV */
+          {
+            "lookup":"properties.SA3_NAME21",
+            "from":{
+              "data":{
+                "url":"data/victoria_median_rent.csv",
+                "format":{"type":"csv","parse":{"Median Rent":"number"}}
+              },
+              "key":"Locality",
+              "fields":["Median Rent"]
+            }
+          }
+        ],
+        "layer":[
+          {
+            "mark":{"type":"geoshape","stroke":"white","strokeWidth":0.6},
+            "encoding":{
+              "color":{
+                "field":"Median Rent","type":"quantitative",
+                "scale":{"scheme":"blues"},
+                "legend":{"title":"Median Rent ($/week)"}
+              },
+              "tooltip":[
+                {"field":"properties.SA3_NAME21","title":"Region"},
+                {"field":"Median Rent","title":"Median Rent ($/week)"}
+              ]
+            }
+          },
+          /* Highest within Melbourne subset */
+          {
+            "transform":[
+              {"joinaggregate":[{"op":"max","field":"Median Rent","as":"maxRent"}]},
+              {"filter":"isValid(datum['Median Rent']) && datum['Median Rent'] == datum.maxRent"}
+            ],
+            "mark":{"type":"geoshape","stroke":"#111","strokeWidth":1.2},
+            "encoding":{
+              "color":{"value":"#d7263d"},
+              "tooltip":[
+                {"field":"properties.SA3_NAME21","title":"Region (Highest – subset)"},
+                {"field":"Median Rent","title":"Median Rent ($/week)"}
+              ]
+            }
+          },
+          /* Lowest within Melbourne subset (ties ok) */
+          {
+            "transform":[
+              {"joinaggregate":[{"op":"min","field":"Median Rent","as":"minRent"}]},
+              {"filter":"isValid(datum['Median Rent']) && datum['Median Rent'] == datum.minRent"}
+            ],
+            "mark":{"type":"geoshape","stroke":"#111","strokeWidth":1.2},
+            "encoding":{
+              "color":{"value":"#2a9d8f"},
+              "tooltip":[
+                {"field":"properties.SA3_NAME21","title":"Region (Lowest – subset)"},
+                {"field":"Median Rent","title":"Median Rent ($/week)"}
+              ]
+            }
+          }
+        ],
+        "config":{"view":{"stroke":null}}
+      };
+      vegaEmbed("#mel-map", melSpec, {actions:false});
+    </script>
+
+  </body>
 </html>

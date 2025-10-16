@@ -1,1 +1,68 @@
-Locality,Median RentMildura,456.7Murray River - Swan Hill,456.7Grampians,367.2Glenelg - South Grampians,394.7Warrnambool,456.7Loddon - Elmore,488.8Maryborough - Pyrenees,272.5Colac - Corangamite,272.5Campaspe,456.7Heathcote - Castlemaine - Kyneton,330.3Creswick - Daylesford - Ballan,297.5Ballarat,297.5Barwon - West,400Surf Coast - Bellarine Peninsula,367.2Bendigo,298.6Campaspe,456.7Geelong,330.3Wyndham,298.6Melton - Bacchus Marsh,330.3Macedon Ranges,272.5Upper Goulburn Valley,424.1Shepparton,424.1Moira,367.2Wangaratta - Benalla,297.5Wodonga - Alpine,330.3Gippsland - East,403.1Wellington,367.2Latrobe Valley,297.5Gippsland - South West,397.4Cardinia,297.5Yarra Ranges,297.5Nillumbik - Kinglake,298.6Baw Baw,297.5Sunbury,456.7Brimbank,297.5Hobsons Bay,365.3Maribyrnong,330.3Keilor,456.7Tullamarine - Broadmeadows,297.5Whittlesea - Wallan,297.5Mornington Peninsula,367.2Casey - South,394.7Frankston,456.7Kingston,367.2Dandenong,330.3Casey - North,409.4Knox,407.1Monash,367.2Maroondah,367.2Manningham - East,403.1Manningham - West,400Whitehorse - West,400Whitehorse - East,403.1Moreland - North,409.4Darebin - North,409.4Banyule,297.5Boroondara,297.5Stonnington - East,403.1Glen Eira,367.2Bayside,297.5Port Philip,407.1Stonnington - West,400Yarra,297.5Darebin - South,394.7Brunswick - Coburg,298.6Essendon,298.6Melbourne City,415.7
+Locality,Median Rent
+Mildura,275
+Murray River - Swan Hill,220
+Grampians,300
+Glenelg - Southern Grampians,290
+Warrnambool,323
+Loddon - Elmore,190
+Maryborough - Pyrenees,320
+Colac - Corangamite,360
+Campaspe,280
+Heathcote - Castlemaine - Kyneton,330
+Creswick - Daylesford - Ballan,300
+Ballarat,280
+Barwon - West,300
+Surf Coast - Bellarine Peninsula,450
+Bendigo,310
+Campaspe,385
+Geelong,330
+Wyndham,300
+Melton - Bacchus Marsh,365
+Macedon Ranges,270
+Upper Goulburn Valley,290
+Shepparton,280
+Moira,240
+Wangaratta - Benalla,280
+Wodonga - Alpine,330
+Gippsland - East,350
+Wellington,360
+Latrobe Valley,320
+Gippsland - South West,320
+Cardinia,300
+Yarra Ranges,300
+Nillumbik - Kinglake,310
+Baw Baw,300
+Sunbury,300
+Brimbank,310
+Hobsons Bay,360
+Maribyrnong,330
+Keilor,440
+Tullamarine - Broadmeadows,350
+Whittlesea - Wallan,390
+Mornington Peninsula,350
+Casey - South,330
+Frankston,330
+Kingston,433
+Dandenong,360
+Casey - North,368
+Knox,380
+Monash,360
+Maroondah,430
+Manningham - East,403
+Manningham - West,400
+Whitehorse - West,400
+Whitehorse - East,403
+Moreland - North,350
+Darebin - North,400
+Banyule,350
+Boroondara,460
+Stonnington - East,460
+Glen Eira,400
+Bayside,450
+Port Phillip,455
+Stonnington - West,499
+Yarra,517
+Darebin - South,395
+Brunswick - Coburg,450
+Essendon,420
+Melbourne City,550
