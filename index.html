@@ -2,265 +2,111 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Australia - Comparing salary, rent and house prices</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rental Affordability in Victoria (2025)</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css">
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
   <style>
-    :root { --maxw: 980px; }
-    body { font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
-    #vis { max-width: var(--maxw); margin: 0 auto; }
-    pre.err { max-width: var(--maxw); margin: 16px auto; color: #b00020; white-space: pre-wrap; }
-
-    /* Tooltip: labels normal, values bold */
-    .vega-tooltip table { border-spacing: 0; }
-    .vega-tooltip td.key   { font-weight: 400; color:#333; padding: 4px 10px 4px 0; }
-    .vega-tooltip td.value { font-weight: 700; color:#111; padding: 4px 0; text-align: right; }
+    body {
+      font-family: "Inter", "Roboto", sans-serif;
+      color: #222;
+      margin: 40px auto;
+      max-width: 900px;
+      line-height: 1.6;
+      background-color: #fafafa;
+    }
+    h1 {
+      font-size: 2em;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 0.2em;
+    }
+    h2 {
+      text-align: center;
+      font-weight: 400;
+      color: #666;
+      margin-top: 0;
+      margin-bottom: 1.5em;
+    }
+    .vis-container {
+      margin: 40px 0;
+      border: 1px solid #eee;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      padding: 16px;
+      background: white;
+    }
+    footer {
+      margin-top: 3em;
+      font-size: 0.9em;
+      color: #555;
+      border-top: 1px solid #ddd;
+      padding-top: 1em;
+      text-align: center;
+    }
+    a { color: #0066cc; text-decoration: none; }
+    a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-  <h2>Australia - Comparing salary, rent and house prices</h2>
-  <div id="vis"></div>
+  <h1>Rental Affordability in Victoria (2025)</h1>
+  <h2>Exploring how rent prices vary across regions of Victoria</h2>
+
+  <p>
+    This visualization examines the <strong>median rent prices</strong> across Victoria in 2025,
+    highlighting regional differences in affordability. Darker shades indicate higher rental costs.
+    Hover over a region to view its details.
+  </p>
+
+  <div class="vis-container" id="rent-map"></div>
+
+  <footer>
+    <p>
+      Data source: <a href="https://housing.vic.gov.au/" target="_blank">Housing Victoria</a> (March Quarter 2025).<br>
+      Author: Your Name &middot; Built with <a href="https://vega.github.io/vega-lite/" target="_blank">Vega-Lite</a>.
+    </p>
+  </footer>
 
   <script>
-    const TOPO_PATH = "geo/au_states.json";
-    const CSV_PATH  = "data/ausaffordability.csv";
-
-    const LABELS = [
-      {ABBR:"WA",  lon:115.8570, lat:-31.9505, lablon:121,   lablat:-29.8},
-      {ABBR:"NT",  lon:130.8456, lat:-12.4634, lablon:135.2, lablat:-10.8},
-      {ABBR:"SA",  lon:138.6007, lat:-34.9285, lablon:143,   lablat:-31.4},
-      {ABBR:"QLD", lon:153.0251, lat:-27.4698, lablon:158.2, lablat:-24.5},
-      {ABBR:"NSW", lon:151.2093, lat:-33.8688, lablon:155.5, lablat:-34.6},
-      {ABBR:"VIC", lon:144.9631, lat:-37.8136, lablon:149.0, lablat:-39.0},
-      {ABBR:"TAS", lon:147.3272, lat:-42.8821, lablon:150.8, lablat:-43.7},
-      {ABBR:"ACT", lon:149.1300, lat:-35.2809, lablon:152.4, lablat:-36.4}
-    ];
-
-    const LINES = LABELS.flatMap(d => ([
-      {ABBR:d.ABBR, order:0, lon:d.lon,   lat:d.lat},
-      {ABBR:d.ABBR, order:1, lon:d.lablon,lat:d.lablat}
-    ]));
-
-    // Compact right-side legend (smaller, no gaps)
-    const STATE_NAMES = [
-      {ABBR:"NSW", name:"New South Wales"},
-      {ABBR:"VIC", name:"Victoria"},
-      {ABBR:"QLD", name:"Queensland"},
-      {ABBR:"SA",  name:"South Australia"},
-      {ABBR:"WA",  name:"Western Australia"},
-      {ABBR:"TAS", name:"Tasmania"},
-      {ABBR:"NT",  name:"Northern Territory"},
-      {ABBR:"ACT", name:"Australian Capital Territory"}
-    ];
-    const LEG_X = 705, LEG_Y = 64, LEG_W = 195, LEG_ROW = 2;   // tighter rows
-    const STATE_LEGEND = STATE_NAMES.map((d,i) => ({
-      text: `${d.ABBR} — ${d.name}`,
-      y: LEG_Y + 24 + i*LEG_ROW
-    }));
-    const LEG_H = 20 + STATE_NAMES.length * LEG_ROW + 10;      // auto height
-
-    async function main() {
-      const resp = await fetch(TOPO_PATH);
-      if (!resp.ok) throw new Error(`Could not load TopoJSON at "${TOPO_PATH}" (HTTP ${resp.status}).`);
-      const topo = await resp.json();
-      if (topo.type !== "Topology" || !topo.objects) throw new Error(`File at "${TOPO_PATH}" is not TopoJSON.`);
-      const featureName = Object.keys(topo.objects)[0];
-
-      const spec = {
-        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-        "width": 900,
-        "height": 650,
-        "background": "#eef6fa",
-
-        "projection": {
-          "type": "conicConformal",
-          "parallels": [-18, -36],
-          "rotate": [-134, 0, 0],
-          "center": [0, -25]
-        },
-
-        "params": [{
-          "name":"metric",
-          "value":"Median Rent (PW)",
-          "bind":{"input":"select","options":["Avg Wage","Median Rent (PW)","Avg House Price"]}
-        }],
-
-        "layer": [
-          /* graticule */
-          {
-            "data": {"graticule": {"step":[10,10], "extent": [[112,-44],[154,-10]]}},
-            "mark": {"type":"geoshape","stroke":"#9fb3c8","strokeWidth":0.6,"filled":false}
-          },
-
-          /* choropleth with fixed tooltip + formatted legend labels */
-          {
-            "data": {"url": TOPO_PATH, "format": {"type":"topojson","feature": featureName}},
-            "transform": [
-              {
-                "calculate":
-                  "datum.properties && datum.properties.STE_ABBREV ? datum.properties.STE_ABBREV : " +
-                  "(datum.properties && datum.properties.STE_NAME21 == 'New South Wales' ? 'NSW' : " +
-                  " datum.properties && datum.properties.STE_NAME21 == 'Victoria' ? 'VIC' : " +
-                  " datum.properties && datum.properties.STE_NAME21 == 'Queensland' ? 'QLD' : " +
-                  " datum.properties && datum.properties.STE_NAME21 == 'South Australia' ? 'SA' : " +
-                  " datum.properties && datum.properties.STE_NAME21 == 'Western Australia' ? 'WA' : " +
-                  " datum.properties && datum.properties.STE_NAME21 == 'Tasmania' ? 'TAS' : " +
-                  " datum.properties && datum.properties.STE_NAME21 == 'Northern Territory' ? 'NT' : " +
-                  " datum.properties && datum.properties.STE_NAME21 == 'Australian Capital Territory' ? 'ACT' : null)",
-                "as": "ABBR"
-              },
-              {
-                "lookup": "ABBR",
-                "from": {
-                  "data": {"url": CSV_PATH},
-                  "key": "states",
-                  "fields": ["Avg Wage","Median Rent (PW)","Avg House Price"]
-                }
-              },
-              {"fold": ["Avg Wage","Median Rent (PW)","Avg House Price"], "as": ["Metric","Value"]},
-              {"filter": "datum.Metric === metric"},
-
-              /* full state name + formatted value for tooltip */
-              {
-                "calculate":
-                  "datum.ABBR === 'NSW' ? 'New South Wales' :" +
-                  "datum.ABBR === 'VIC' ? 'Victoria' :" +
-                  "datum.ABBR === 'QLD' ? 'Queensland' :" +
-                  "datum.ABBR === 'SA'  ? 'South Australia' :" +
-                  "datum.ABBR === 'WA'  ? 'Western Australia' :" +
-                  "datum.ABBR === 'TAS' ? 'Tasmania' :" +
-                  "datum.ABBR === 'NT'  ? 'Northern Territory' :" +
-                  "datum.ABBR === 'ACT' ? 'Australian Capital Territory' : datum.ABBR",
-                "as": "StateName"
-              },
-              {"calculate": "format(datum.Value, '$,.0f')", "as": "ValueFmt"}
-            ],
-            "mark": {"type":"geoshape","stroke":"#ffffff","strokeWidth":1},
-            "encoding": {
-              "color": {
-                "field":"Value",
-                "type":"quantitative",
-                "scale":{"scheme":"blues"},
-                "legend": {
-                  "gradientLength": 110,
-                  "gradientThickness": 10,
-                  "labelFontSize": 11,
-                  "titleFontSize": 12,
-                  "titlePadding": 4,
-                  "format": "$,d"          /* <-- integers, currency symbol; no scientific notation */
-                },
-                "title":{
-                  "signal":
-                    "metric==='Avg Wage' ? 'Average Weekly Wage (AUD)' :" +
-                    "metric==='Median Rent (PW)' ? 'Median Weekly Rent (AUD)' :" +
-                    "'Average House Price (AUD)'"
-                }
-              },
-              "tooltip": [
-                {"field":"StateName","title":"State"},
-                {"field":"Metric","title":"Metric"},
-                {"field":"ValueFmt","title":"Value"}
-              ]
-            }
-          },
-
-          /* leader lines */
-          {
-            "data": {"values": LINES},
-            "mark": {"type": "line", "stroke": "#2b3e50", "strokeWidth": 1, "opacity": 0.8},
-            "encoding": {
-              "longitude": {"field":"lon"}, "latitude": {"field":"lat"},
-              "order": {"field":"order"},
-              "detail": {"field":"ABBR"}
-            }
-          },
-
-          /* text labels */
-          {
-            "data": {"values": LABELS},
-            "transform": [
-              {
-                "lookup": "ABBR",
-                "from": {
-                  "data": {"url": CSV_PATH},
-                  "key": "states",
-                  "fields": ["Avg Wage","Median Rent (PW)","Avg House Price"]
-                }
-              },
-              {"fold": ["Avg Wage","Median Rent (PW)","Avg House Price"], "as": ["Metric","Value"]},
-              {"filter": "datum.Metric === metric"},
-              {"calculate": "datum.ABBR + ': $' + format(datum.Value, ',.0f')", "as": "labelText"}
-            ],
-            "mark": {"type":"text", "fontSize": 12, "fontWeight":"600", "dx": 0, "dy": 0, "fill": "#1f2d3a"},
-            "encoding": {
-              "longitude": {"field":"lablon"},
-              "latitude": {"field":"lablat"},
-              "text": {"field":"labelText"}
-            }
-          },
-
-          /* ---- Compact right-side states legend (bordered box, no gaps) ---- */
-
-          /* background box (auto height from rows) */
-          {
-            "mark": {
-              "type":"rect",
-              "x": LEG_X, "y": LEG_Y,
-              "width": LEG_W, "height": LEG_H,
-              "fill": "#ffffff", "opacity": 0.95,
-              "stroke": "#c9d3dc", "strokeWidth": 1,
-              "cornerRadius": 8,
-              "aria": false
-            }
-          },
-          /* title */
-          {
-            "mark": { "type":"text", "fontSize": 11, "fontWeight":"700", "align":"left", "fill": "#1f2d3a" },
-            "encoding": {
-              "x": {"value": LEG_X + 10, "axis": null},
-              "y": {"value": LEG_Y + 16, "axis": null},
-              "text": {"value":"States"}
-            }
-          },
-          /* items (smaller font, tight rows, no axes) */
-          {
-            "data": {"values": STATE_LEGEND},
-            "mark": { "type":"text", "fontSize": 10, "fontWeight":"500", "align":"left", "fill": "#1f2d3a" },
-            "encoding": {
-              "x": {"value": LEG_X + 10, "axis": null},
-              "y": {"field":"y", "type":"quantitative", "axis": null},
-              "text": {"field":"text"}
-            }
-          }
-        ],
-
-        "config": {
-          "numberFormat": ",",
-          "legend":{"orient":"bottom"},
-          "view":{"stroke":null},
-          "title":{"fontSize":18,"anchor":"start"}
-        },
-        "title": "Australia - Housing Affordability by State/Territory"
-      };
-
-      await vegaEmbed("#vis", spec, {actions:false});
+const mapSpec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "width": 700,
+  "height": 600,
+  "data": {
+    "url": "geo/victopo.json",
+    "format": {"type": "topojson", "feature": "SA3_2021_AUST_GDA2020"}
+  },
+  "transform": [
+    {
+      "lookup": "properties.SA3_NAME21",
+      "from": {
+        "data": {"url": "data/victoria_median_rent.csv"},
+        "key": "Locality",
+        "fields": ["Median Rent"]
+      }
     }
+  ],
+  "projection": {"type": "mercator"},
+  "mark": {"type": "geoshape", "stroke": "white", "strokeWidth": 0.5},
+  "encoding": {
+    "color": {
+      "field": "Median Rent",
+      "type": "quantitative",
+      "scale": {"scheme": "blues"},
+      "legend": {"title": "Median Rent ($/week)"}
+    },
+    "tooltip": [
+      {"field": "properties.SA3_NAME21", "title": "Region"},
+      {"field": "Median Rent", "title": "Median Rent ($/week)"}
+    ]
+  },
+  "config": {"view": {"stroke": null}}
+};
 
-    main().catch(err => {
-      console.error(err);
-      const pre = document.createElement('pre');
-      pre.className = 'err';
-      pre.textContent = String(err.stack || err);
-      document.body.appendChild(pre);
-    });
-  </script>
-  <h3>Wage vs Rent (bubble = house price)</h3>
-  <div id="vis-scatter"></div>
+vegaEmbed("#rent-map", mapSpec, {actions: false});
+</script>
 
-  <script>
-    vegaEmbed('#vis-scatter', 'scatter_affordability.json', { actions: false });
-  </script>
 </body>
 </html>
