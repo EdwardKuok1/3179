@@ -450,7 +450,9 @@
               "key":"States/Capital Cities",
               "fields":["Median Rent per week"]
             }
-          }
+          },
+          {"calculate": "replace(datum['properties.GCC_NAME21'],'Vic.','Victoria')", "as":"RegionFull"},
+          {"calculate": "replace(datum.RegionFull,'Tas.','Tasmania')", "as":"RegionFull"}
         ],
         "layer":[
           {
@@ -462,7 +464,7 @@
                 "legend":{"title":"Median Rent ($/week)"}
               },
               "tooltip":[
-                {"field":"properties.GCC_NAME21","title":"Region"},
+                {"field":"RegionFull","title":"Region"},
                 {"field":"Median Rent per week","title":"Median Rent ($/week)"}
               ]
             }
@@ -476,7 +478,7 @@
             "encoding":{
               "color":{"value":"#d7263d"},
               "tooltip":[
-                {"field":"properties.GCC_NAME21","title":"Region (Highest)"},
+                {"field":"RegionFull","title":"Region (Highest)"},
                 {"field":"Median Rent per week","title":"Median Rent ($/week)"}
               ]
             }
@@ -490,7 +492,7 @@
             "encoding":{
               "color":{"value":"#2a9d8f"},
               "tooltip":[
-                {"field":"properties.GCC_NAME21","title":"Region (Lowest)"},
+                {"field":"RegionFull","title":"Region (Lowest)"},
                 {"field":"Median Rent per week","title":"Median Rent ($/week)"}
               ]
             }
@@ -518,20 +520,29 @@
         "transform": [
           {"calculate": "datum['States/Capital Cities']", "as": "Region"},
           {"calculate": "indexof(datum.Region, 'Greater ') == 0 || datum.Region == 'Australian Capital Territory' ? 'Capital' : 'Rest'", "as": "Area"},
-          {"calculate": "datum.Region == 'Greater Melbourne' ? 'VIC' : datum.Region == 'Rest of Vic.' ? 'VIC' : datum.Region == 'Greater Sydney' ? 'NSW' : datum.Region == 'Rest of NSW' ? 'NSW' : datum.Region == 'Australian Capital Territory' ? 'ACT' : datum.Region == 'Greater Brisbane' ? 'QLD' : datum.Region == 'Rest of Qld' ? 'QLD' : datum.Region == 'Greater Adelaide' ? 'SA' : datum.Region == 'Rest of SA' ? 'SA' : datum.Region == 'Greater Perth' ? 'WA' : datum.Region == 'Rest of WA' ? 'WA' : datum.Region == 'Greater Darwin' ? 'NT' : datum.Region == 'Rest of NT' ? 'NT' : datum.Region == 'Greater Hobart' ? 'TAS' : datum.Region == 'Rest of Tas.' ? 'TAS' : ''",
-           "as": "State"},
-          {"filter": "datum.State != ''"}
+          {"calculate": "datum.Region == 'Greater Melbourne' || datum.Region == 'Rest of Vic.' ? 'Victoria' : datum.Region == 'Greater Sydney' || datum.Region == 'Rest of NSW' ? 'New South Wales' : datum.Region == 'Australian Capital Territory' ? 'Australian Capital Territory' : datum.Region == 'Greater Brisbane' || datum.Region == 'Rest of Qld' ? 'Queensland' : datum.Region == 'Greater Adelaide' || datum.Region == 'Rest of SA' ? 'South Australia' : datum.Region == 'Greater Perth' || datum.Region == 'Rest of WA' ? 'Western Australia' : datum.Region == 'Greater Darwin' || datum.Region == 'Rest of NT' ? 'Northern Territory' : datum.Region == 'Greater Hobart' || datum.Region == 'Rest of Tas.' ? 'Tasmania' : ''",
+           "as": "StateFull"},
+          {"filter": "datum.StateFull != ''"}
         ],
         "mark": {"type":"bar", "cornerRadius": 2},
         "encoding": {
-          "x": {"field":"State", "type":"nominal", "title":"State/Territory",
-                 "sort": ["NSW","VIC","QLD","WA","SA","TAS","NT","ACT"]},
+          "x": {"field":"StateFull", "type":"nominal", "title":"State/Territory",
+                 "sort": [
+                   "New South Wales",
+                   "Victoria",
+                   "Queensland",
+                   "Western Australia",
+                   "South Australia",
+                   "Tasmania",
+                   "Northern Territory",
+                   "Australian Capital Territory"
+                 ]},
           "xOffset": {"field":"Area"},
           "y": {"field":"Median Rent per week", "type":"quantitative", "title":"Median Rent ($/week)"},
           "color": {"field":"Area", "type":"nominal", "scale": {"scheme":"tableau10"}, "legend":{"title":""}},
           "tooltip": [
             {"field":"Region", "title":"Region"},
-            {"field":"State", "title":"State"},
+            {"field":"StateFull", "title":"State"},
             {"field":"Area", "title":"Area"},
             {"field":"Median Rent per week", "title":"Median Rent ($/week)"}
           ]
@@ -540,6 +551,22 @@
       };
       vegaEmbed("#aus-bars", ausBarsSpec, {actions:false});
     </script>
+
+    <!-- Section 7: Australia Historical Trend (chart left, text right) -->
+    <section class="section">
+      <div class="row">
+        <div class="col-vis">
+          <div id="aus-history" class="vis-container"></div>
+        </div>
+        <div class="col-text">
+          <h3>Australia Historical Rents by State (2018–2025)</h3>
+          <p>
+            Median weekly rent trends across each state and territory since mid‑2018.
+            Use the legend to highlight a particular state.
+          </p>
+        </div>
+      </div>
+    </section>
 
     <script>
       const vicTop10Spec = {
@@ -601,6 +628,104 @@
         "config": {"view": {"stroke": null}}
       };
       vegaEmbed("#vic-hist", vicHistSpec, {actions:false});
+    </script>
+
+    <script>
+      (async () => {
+        try {
+          const resp = await fetch('data/australia_historical_rent.csv');
+          const rawText = await resp.text();
+
+          const rawLines = rawText.split(/\r?\n/);
+          const lines = [];
+          for (const line of rawLines) {
+            const t = line.trim();
+            if (!t) continue;
+            if (t === '"Median weekly rent"' || t === 'Median weekly rent') continue; // drop title row
+            if (t.startsWith('"Source:') || t.startsWith('Source:')) continue; // drop footer
+            lines.push(t);
+          }
+          if (!lines.length) return;
+
+          // Ensure the header has a Month column
+          if (lines[0][0] === ',') {
+            lines[0] = 'Month' + lines[0];
+          } else if (!/^"?Month"?,/.test(lines[0])) {
+            lines[0] = 'Month,' + lines[0];
+          }
+
+          const headerParts = lines[0].split(',').map(s => s.replace(/^"|"$/g, ''));
+          const monthIndexByAbbr = { Jan:0, Feb:1, Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11 };
+          const shortToFull = {
+            NSW: 'New South Wales',
+            VIC: 'Victoria',
+            Qld: 'Queensland',
+            QLD: 'Queensland',
+            SA: 'South Australia',
+            WA: 'Western Australia',
+            TAS: 'Tasmania',
+            Tas: 'Tasmania',
+            NT: 'Northern Territory',
+            ACT: 'Australian Capital Territory'
+          };
+          const stripLabel = (h) => h.replace(/"/g, '').replace(/\s*\(\$\)\s*/g, '').replace(/\.$/, '');
+          const parseMonthYear = (s) => {
+            const token = s.replace(/"/g, '').trim();
+            const [m, yy] = token.split('-');
+            const month = monthIndexByAbbr[m];
+            const year = 2000 + parseInt(yy, 10);
+            if (Number.isNaN(month) || Number.isNaN(year)) return null;
+            return new Date(Date.UTC(year, month, 1));
+          };
+
+          const tidy = [];
+          for (let i = 1; i < lines.length; i++) {
+            const parts = lines[i].split(',').map(s => s.replace(/^"|"$/g, ''));
+            if (parts.length < 2) continue;
+            const date = parseMonthYear(parts[0]);
+            if (!date) continue;
+            for (let j = 1; j < headerParts.length; j++) {
+              const rawHeader = headerParts[j];
+              const short = stripLabel(rawHeader);
+              const stateFull = shortToFull[short] || short;
+              const valueStr = parts[j];
+              const rent = valueStr ? Number(valueStr) : NaN;
+              if (!Number.isNaN(rent)) {
+                tidy.push({ Date: date, State: stateFull, Rent: rent });
+              }
+            }
+          }
+
+          const ausHistorySpec = {
+            $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+            title: { text: 'Historical Median Weekly Rent by State', anchor: 'start', fontSize: 18, color: '#111' },
+            width: 'container',
+            height: 420,
+            autosize: { type: 'fit', contains: 'padding' },
+            data: { values: tidy },
+            params: [
+              { name: 'Highlight', select: 'point', bind: 'legend' }
+            ],
+            mark: { type: 'line' },
+            encoding: {
+              x: { field: 'Date', type: 'temporal', title: 'Month' },
+              y: { field: 'Rent', type: 'quantitative', title: 'Median Rent ($/week)' },
+              color: { field: 'State', type: 'nominal', title: 'State/Territory' },
+              opacity: { condition: { param: 'Highlight', value: 1 }, value: 0.2 },
+              tooltip: [
+                { field: 'State', title: 'State' },
+                { field: 'Date', type: 'temporal', title: 'Month', timeUnit: 'yearmonth' },
+                { field: 'Rent', title: 'Rent ($/week)' }
+              ]
+            },
+            config: { view: { stroke: null } }
+          };
+
+          vegaEmbed('#aus-history', ausHistorySpec, { actions: false });
+        } catch (err) {
+          console.error('Failed to render historical chart', err);
+        }
+      })();
     </script>
 
   </body>
