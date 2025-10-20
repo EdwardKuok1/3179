@@ -206,6 +206,56 @@
       </div>
     </section>
 
+    <!-- Section 4: Capital vs Regional (text left, chart right) -->
+    <section class="section">
+      <div class="row">
+        <div class="col-vis">
+          <div id="aus-bars" class="vis-container"></div>
+        </div>
+        <div class="col-text">
+          <h3>Capital vs Regional Rents by State (2025)</h3>
+          <p>
+            Capitals generally outprice their regional counterparts, with the largest gaps in New South Wales and
+            Western Australia. The Australian Capital Territory appears only once as it represents both capital and
+            territory. Queensland shows a relatively small difference between Greater Brisbane and the rest of the state.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5: Top 10 Victoria (chart left, text right) -->
+    <section class="section">
+      <div class="row reverse">
+        <div class="col-vis">
+          <div id="vic-top10" class="vis-container"></div>
+        </div>
+        <div class="col-text">
+          <h3>Top 10 Highest Median Rents in Victoria (2025)</h3>
+          <p>
+            The highest median rents cluster around inner metropolitan Melbourne and coastal lifestyle areas such as
+            the Surf Coast. These markets reflect stronger demand pressures from employment, amenities, and sea-change
+            preferences.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 6: Distribution (text left, chart right) -->
+    <section class="section">
+      <div class="row">
+        <div class="col-vis">
+          <div id="vic-hist" class="vis-container"></div>
+        </div>
+        <div class="col-text">
+          <h3>Distribution of Victoria Median Rents (2025)</h3>
+          <p>
+            Most Victoria regions fall between $300 and $400 per week, with a long right tail driven by high-demand
+            inner-city localities and affluent coastal pockets.
+          </p>
+        </div>
+      </div>
+    </section>
+
     <footer>
       <p>Data source: <a href="https://housing.vic.gov.au/" target="_blank">Housing Victoria</a> (March Quarter 2025).</p>
     </footer>
@@ -449,6 +499,108 @@
         "config":{"view":{"stroke":null}}
       };
       vegaEmbed("#aus-map", ausSpec, {actions:false});
+    </script>
+
+    <script>
+      const ausBarsSpec = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "title": {
+          "text": "Capital vs Regional Rents by State (2025)",
+          "anchor": "start", "fontSize": 18, "subtitleFontSize": 12, "color":"#111"
+        },
+        "width": "container",
+        "height": 420,
+        "autosize": {"type":"fit","contains":"padding"},
+        "data": {
+          "url": "data/australia_median_rent.csv",
+          "format": {"type":"csv", "parse": {"Median Rent per week":"number"}}
+        },
+        "transform": [
+          {"calculate": "datum['States/Capital Cities']", "as": "Region"},
+          {"calculate": "indexof(datum.Region, 'Greater ') == 0 || datum.Region == 'Australian Capital Territory' ? 'Capital' : 'Rest'", "as": "Area"},
+          {"calculate": "datum.Region == 'Greater Melbourne' ? 'VIC' : datum.Region == 'Rest of Vic.' ? 'VIC' : datum.Region == 'Greater Sydney' ? 'NSW' : datum.Region == 'Rest of NSW' ? 'NSW' : datum.Region == 'Australian Capital Territory' ? 'ACT' : datum.Region == 'Greater Brisbane' ? 'QLD' : datum.Region == 'Rest of Qld' ? 'QLD' : datum.Region == 'Greater Adelaide' ? 'SA' : datum.Region == 'Rest of SA' ? 'SA' : datum.Region == 'Greater Perth' ? 'WA' : datum.Region == 'Rest of WA' ? 'WA' : datum.Region == 'Greater Darwin' ? 'NT' : datum.Region == 'Rest of NT' ? 'NT' : datum.Region == 'Greater Hobart' ? 'TAS' : datum.Region == 'Rest of Tas.' ? 'TAS' : ''",
+           "as": "State"},
+          {"filter": "datum.State != ''"}
+        ],
+        "mark": {"type":"bar", "cornerRadius": 2},
+        "encoding": {
+          "x": {"field":"State", "type":"nominal", "title":"State/Territory",
+                 "sort": ["NSW","VIC","QLD","WA","SA","TAS","NT","ACT"]},
+          "xOffset": {"field":"Area"},
+          "y": {"field":"Median Rent per week", "type":"quantitative", "title":"Median Rent ($/week)"},
+          "color": {"field":"Area", "type":"nominal", "scale": {"scheme":"tableau10"}, "legend":{"title":""}},
+          "tooltip": [
+            {"field":"Region", "title":"Region"},
+            {"field":"State", "title":"State"},
+            {"field":"Area", "title":"Area"},
+            {"field":"Median Rent per week", "title":"Median Rent ($/week)"}
+          ]
+        },
+        "config": {"view": {"stroke": null}}
+      };
+      vegaEmbed("#aus-bars", ausBarsSpec, {actions:false});
+    </script>
+
+    <script>
+      const vicTop10Spec = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "title": {
+          "text": "Top 10 Highest Median Rents in Victoria (2025)",
+          "anchor": "start", "fontSize": 18, "subtitleFontSize": 12, "color":"#111"
+        },
+        "width": "container",
+        "height": 420,
+        "autosize": {"type":"fit","contains":"padding"},
+        "data": {
+          "url": "data/victoria_median_rent.csv",
+          "format": {"type":"csv", "parse": {"Median Rent":"number"}}
+        },
+        "transform": [
+          {"aggregate": [{"op":"max", "field":"Median Rent", "as":"MaxRent"}], "groupby": ["Locality"]},
+          {"window": [{"op":"rank", "as":"rank"}], "sort": [{"field":"MaxRent", "order":"descending"}]},
+          {"filter": "datum.rank <= 10"}
+        ],
+        "mark": {"type":"bar", "cornerRadiusEnd": 2},
+        "encoding": {
+          "y": {"field":"Locality", "type":"nominal", "title":"Locality", "sort":"-x"},
+          "x": {"field":"MaxRent", "type":"quantitative", "title":"Median Rent ($/week)"},
+          "color": {"value":"#4e79a7"},
+          "tooltip": [
+            {"field":"Locality", "title":"Locality"},
+            {"field":"MaxRent", "title":"Median Rent ($/week)"}
+          ]
+        },
+        "config": {"view": {"stroke": null}}
+      };
+      vegaEmbed("#vic-top10", vicTop10Spec, {actions:false});
+    </script>
+
+    <script>
+      const vicHistSpec = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "title": {
+          "text": "Distribution of Victoria Median Rents (2025)",
+          "anchor": "start", "fontSize": 18, "subtitleFontSize": 12, "color":"#111"
+        },
+        "width": "container",
+        "height": 320,
+        "autosize": {"type":"fit","contains":"padding"},
+        "data": {
+          "url": "data/victoria_median_rent.csv",
+          "format": {"type":"csv", "parse": {"Median Rent":"number"}}
+        },
+        "mark": {"type":"bar", "opacity": 0.9},
+        "encoding": {
+          "x": {"field":"Median Rent", "type":"quantitative", "bin":{"maxbins": 20}, "title":"Median Rent ($/week)"},
+          "y": {"aggregate":"count", "type":"quantitative", "title":"Number of Localities"},
+          "color": {"value":"#59a14f"},
+          "tooltip": [
+            {"aggregate":"count", "title":"Count"}
+          ]
+        },
+        "config": {"view": {"stroke": null}}
+      };
+      vegaEmbed("#vic-hist", vicHistSpec, {actions:false});
     </script>
 
   </body>
