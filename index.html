@@ -187,6 +187,25 @@
       </div>
     </section>
 
+    <!-- Section 3: Australia (map left, text right) -->
+    <section class="section">
+      <div class="row">
+        <div class="col-vis">
+          <div id="aus-map" class="vis-container"></div>
+        </div>
+        <div class="col-text">
+          <h3>Australia Median Rent (2025)</h3>
+          <p>
+            Nationally, rents peak in the larger capital cities, led by Greater Sydney at $796 per week
+            and Greater Perth at $721. More affordable regions remain outside the capitals, with Rest of
+            South Australia at $446 and Rest of Tasmania at $469. In most states, capital city areas
+            outprice their regional counterparts; Queensland is relatively close, with Greater Brisbane at
+            $687 and Rest of Qld at $668.
+          </p>
+        </div>
+      </div>
+    </section>
+
     <footer>
       <p>Data source: <a href="https://housing.vic.gov.au/" target="_blank">Housing Victoria</a> (March Quarter 2025).</p>
     </footer>
@@ -352,6 +371,84 @@
         "config":{"view":{"stroke":null}}
       };
       vegaEmbed("#mel-map", melSpec, {actions:false});
+    </script>
+
+    <script>
+      const ausSpec = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "title": {
+          "text": "Australia Median Rent (2025)",
+          "subtitle": "red = highest, teal = lowest",
+          "anchor": "start", "fontSize": 18, "subtitleFontSize": 12, "color":"#111"
+        },
+        "width": "container",
+        "height": 520,
+        "autosize": {"type":"fit","contains":"padding"},
+        "projection": {"type":"mercator"},
+        "data": {
+          "url": "geo/austopo.json",
+          "format": {"type":"topojson","feature":"GCCSA_2021_AUST_GDA2020"}
+        },
+        "transform": [
+          {
+            "lookup":"properties.GCC_NAME21",
+            "from":{
+              "data":{
+                "url":"data/australia_median_rent.csv",
+                "format":{"type":"csv","parse":{"Median Rent per week":"number"}}
+              },
+              "key":"States/Capital Cities",
+              "fields":["Median Rent per week"]
+            }
+          }
+        ],
+        "layer":[
+          {
+            "mark":{"type":"geoshape","stroke":"white","strokeWidth":0.6},
+            "encoding":{
+              "color":{
+                "field":"Median Rent per week","type":"quantitative",
+                "scale":{"scheme":"blues"},
+                "legend":{"title":"Median Rent ($/week)"}
+              },
+              "tooltip":[
+                {"field":"properties.GCC_NAME21","title":"Region"},
+                {"field":"Median Rent per week","title":"Median Rent ($/week)"}
+              ]
+            }
+          },
+          {
+            "transform":[
+              {"joinaggregate":[{"op":"max","field":"Median Rent per week","as":"maxRentAus"}]},
+              {"filter":"isValid(datum['Median Rent per week']) && datum['Median Rent per week'] == datum.maxRentAus"}
+            ],
+            "mark":{"type":"geoshape","stroke":"#111","strokeWidth":1.2},
+            "encoding":{
+              "color":{"value":"#d7263d"},
+              "tooltip":[
+                {"field":"properties.GCC_NAME21","title":"Region (Highest)"},
+                {"field":"Median Rent per week","title":"Median Rent ($/week)"}
+              ]
+            }
+          },
+          {
+            "transform":[
+              {"joinaggregate":[{"op":"min","field":"Median Rent per week","as":"minRentAus"}]},
+              {"filter":"isValid(datum['Median Rent per week']) && datum['Median Rent per week'] == datum.minRentAus"}
+            ],
+            "mark":{"type":"geoshape","stroke":"#111","strokeWidth":1.2},
+            "encoding":{
+              "color":{"value":"#2a9d8f"},
+              "tooltip":[
+                {"field":"properties.GCC_NAME21","title":"Region (Lowest)"},
+                {"field":"Median Rent per week","title":"Median Rent ($/week)"}
+              ]
+            }
+          }
+        ],
+        "config":{"view":{"stroke":null}}
+      };
+      vegaEmbed("#aus-map", ausSpec, {actions:false});
     </script>
 
   </body>
