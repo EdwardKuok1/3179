@@ -4,6 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Rental Affordability in Victoria (2025)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css">
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
@@ -130,12 +133,53 @@
     }
   </style>
 
+  <style>
+    :root { --brand:#1f6feb; --text:#222; --muted:#666; --border:#e5e7eb; --bg:#fafafa; --surface:#ffffff; --nav-height:64px; }
+    *,*::before,*::after{ box-sizing:border-box; }
+    html{ scroll-behavior:smooth; }
+    body{ margin:0; background:var(--bg); color:var(--text); overflow-x:hidden; }
+
+    /* Top navigation */
+    .top-nav{ position:sticky; top:0; z-index:1000; background:var(--surface); border-bottom:1px solid var(--border); box-shadow:0 2px 12px rgba(0,0,0,0.04); height:var(--nav-height); display:flex; align-items:center; }
+    .nav-inner{ width:100%; max-width:1350px; margin:0 auto; padding:0 20px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .brand{ font-weight:700; letter-spacing:0.2px; color:var(--brand); }
+    .nav-links{ display:flex; gap:18px; flex-wrap:wrap; }
+    .nav-links a{ color:#334155; text-decoration:none; font-weight:600; font-size:14px; padding:6px 10px; border-radius:8px; }
+    .nav-links a:hover{ background:#eef2ff; color:#1e3a8a; text-decoration:none; }
+
+    /* Page container */
+    .content{ max-width:1350px; margin:0 auto; padding:24px 20px 32px; }
+
+    /* Layout overrides for responsiveness and no overflow */
+    .section{ scroll-margin-top: calc(var(--nav-height) + 16px); }
+    .col-vis{ flex:1 1 0; min-width:0; }
+    .col-text{ flex:0 0 420px; max-width:420px; }
+    .vis-container{ overflow:hidden; }
+    canvas, svg{ max-width:100%; height:auto; display:block; }
+    @media (max-width:1100px){ .col-text{ max-width:none; flex-basis:auto; } }
+  </style>
+
 </head>
 <body>
+    <header class="top-nav" role="navigation" aria-label="Primary">
+      <div class="nav-inner">
+        <div class="brand">Rental Affordability 2025</div>
+        <nav class="nav-links">
+          <a href="#victoria">Victoria</a>
+          <a href="#melbourne">Melbourne</a>
+          <a href="#australia">Australia</a>
+          <a href="#states-comparison">Comparisons</a>
+          <a href="#vic-top10-section">Top 10</a>
+          <a href="#vic-distribution">Distribution</a>
+          <a href="#history">History</a>
+        </nav>
+      </div>
+    </header>
+    <main class="content">
     <h1>Rental Affordability in Victoria (2025)</h1>
     <h2>Exploring how rent prices vary across regions of Victoria</h2>
     <!-- Section 1: Victoria (map left, text right) -->
-    <section class="section">
+    <section id="victoria" class="section">
       <div class="row">
         <div class="col-vis">
           <div id="rent-map" class="vis-container"></div>
@@ -160,7 +204,7 @@
     </section>
 
     <!-- Section 2: Melbourne (text left, map right) -->
-    <section class="section">
+    <section id="melbourne" class="section">
       <div class="row reverse">
         <div class="col-vis">
           <div id="mel-map" class="vis-container"></div>
@@ -188,7 +232,7 @@
     </section>
 
     <!-- Section 3: Australia (map left, text right) -->
-    <section class="section">
+    <section id="australia" class="section">
       <div class="row">
         <div class="col-vis">
           <div id="aus-map" class="vis-container"></div>
@@ -207,7 +251,7 @@
     </section>
 
     <!-- Section 4: Capital vs Regional (text left, chart right) -->
-    <section class="section">
+    <section id="states-comparison" class="section">
       <div class="row">
         <div class="col-vis">
           <div id="aus-bars" class="vis-container"></div>
@@ -224,7 +268,7 @@
     </section>
 
     <!-- Section 5: Top 10 Victoria (chart left, text right) -->
-    <section class="section">
+    <section id="vic-top10-section" class="section">
       <div class="row reverse">
         <div class="col-vis">
           <div id="vic-top10" class="vis-container"></div>
@@ -241,7 +285,7 @@
     </section>
 
     <!-- Section 6: Distribution (text left, chart right) -->
-    <section class="section">
+    <section id="vic-distribution" class="section">
       <div class="row">
         <div class="col-vis">
           <div id="vic-hist" class="vis-container"></div>
@@ -553,7 +597,7 @@
     </script>
 
     <!-- Section 7: Australia Historical Trend (chart left, text right) -->
-    <section class="section">
+    <section id="history" class="section">
       <div class="row">
         <div class="col-vis">
           <div id="aus-history" class="vis-container"></div>
@@ -728,5 +772,6 @@
       })();
     </script>
 
+  </main>
   </body>
 </html>
