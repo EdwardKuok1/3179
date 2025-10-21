@@ -304,8 +304,27 @@
       </div>
     </section>
 
+    <!-- Section 7: Australia Historical Trend (chart left, text right) -->
+    <section id="history" class="section">
+      <div class="row">
+        <div class="col-vis">
+          <div id="aus-history" class="vis-container"></div>
+        </div>
+        <div class="col-text">
+          <h3>Australia Historical Rents by State (2018–2025)</h3>
+          <p>
+            Median weekly rent trends across each state and territory since mid‑2018.
+            Use the legend to highlight a particular state.
+          </p>
+        </div>
+      </div>
+    </section>
+
     <footer>
-      <p>Data source: <a href="https://housing.vic.gov.au/" target="_blank">Housing Victoria</a> (March Quarter 2025).</p>
+      <p>Data source: <a href="https://www.dffh.vic.gov.au/publications/past-rental-reports" target="_blank">Melbourne and Victoria Rent in suburbs</a> (DEC 2024).</p>
+      <p>Data source: <a href="https://www.forbes.com/advisor/au/property/average-rent-price-in-australia/" target="_blank">Median Rent Price in Australia States and Its Capitals</a> (June 2025).</p>
+      <p>Data source: <a href="https://www.abs.gov.au/articles/latest-insights-rental-market" target="_blank">Australia Historical Housing Data</a> (April 2025).</p>
+      <p>This visualization is made by Edward Kuok Ee Xi | 33988307 | 21/10/2025 | Monash University</p>
     </footer>
 
     <script>
@@ -313,7 +332,7 @@
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         "title": {
           "text": "Rural Victoria Median Rent (2025)",
-          "subtitle": "red = highest, teal = lowest",
+          "subtitle": "red = highest, teal = lowest", 
           "anchor": "start", "fontSize": 20, "subtitleFontSize": 13, "color":"#111"
         },
         "width": "container",
@@ -599,22 +618,6 @@
       };
       vegaEmbed("#aus-bars", ausBarsSpec, {actions:false});
     </script>
-
-    <!-- Section 7: Australia Historical Trend (chart left, text right) -->
-    <section id="history" class="section">
-      <div class="row">
-        <div class="col-vis">
-          <div id="aus-history" class="vis-container"></div>
-        </div>
-        <div class="col-text">
-          <h3>Australia Historical Rents by State (2018–2025)</h3>
-          <p>
-            Median weekly rent trends across each state and territory since mid‑2018.
-            Use the legend to highlight a particular state.
-          </p>
-        </div>
-      </div>
-    </section>
 
     <script>
       const vicTop10Spec = {
