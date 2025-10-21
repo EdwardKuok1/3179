@@ -517,9 +517,7 @@
               "key":"States/Capital Cities",
               "fields":["Median Rent per week"]
             }
-          },
-          {"calculate": "replace(datum['properties.GCC_NAME21'],'Vic.','Victoria')", "as":"RegionFull"},
-          {"calculate": "replace(datum.RegionFull,'Tas.','Tasmania')", "as":"RegionFull"}
+          }
         ],
         "layer":[
           {
@@ -531,7 +529,7 @@
                 "legend":{"title":"Median Rent ($/week)"}
               },
               "tooltip":[
-                {"field":"RegionFull","title":"Region"},
+                {"field":"properties.GCC_NAME21","title":"Region"},
                 {"field":"Median Rent per week","title":"Median Rent ($/week)"}
               ]
             }
@@ -545,7 +543,7 @@
             "encoding":{
               "color":{"value":"#d7263d"},
               "tooltip":[
-                {"field":"RegionFull","title":"Region (Highest)"},
+                {"field":"properties.GCC_NAME21","title":"Region (Highest)"},
                 {"field":"Median Rent per week","title":"Median Rent ($/week)"}
               ]
             }
@@ -559,7 +557,7 @@
             "encoding":{
               "color":{"value":"#2a9d8f"},
               "tooltip":[
-                {"field":"RegionFull","title":"Region (Lowest)"},
+                {"field":"properties.GCC_NAME21","title":"Region (Lowest)"},
                 {"field":"Median Rent per week","title":"Median Rent ($/week)"}
               ]
             }
